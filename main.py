@@ -37,7 +37,7 @@ TEMPLATE = """\
   <author><name>{name}</name></author>
   <content type="text/plain">{body}</content>
   <updated>{timestamp}</updated>
-  {category}
+  {categories}
   <app:control>
     <app:draft>{draft}</app:draft>
   </app:control>
@@ -49,7 +49,7 @@ ARTICLE_HEADER = {
     "name": "",
     "body": "",
     "timestamp": "",
-    "category": "",
+    "categories": "",
     "draft": "no"
 }
 
@@ -58,6 +58,7 @@ def make_categories_tag(categories):
     categories = map(lambda x: x.strip(), categories.split(","))
     category_tags = ""
     for category in categories:
+        print(category)
         category_tags += '<category term="{}" />'.format(category)
     return category_tags
 
@@ -90,8 +91,9 @@ def parse_article(article_text):
 
 
 def make_xml(article_info):
-    article_info["category"] = make_categories_tag(article_info["category"])
+    article_info["categories"] = make_categories_tag(article_info["categories"])
     made_xml = TEMPLATE.format(**article_info)
+    print(made_xml)
     return made_xml
 
 
