@@ -84,6 +84,7 @@ def parse_article(article_text):
         article_information["body"] = article_text[article_body_start:]
     else:
         article_information = ARTICLE_HEADER.copy()
+        article_information["draft"] = "yes"
         article_information["body"] = article_text
     return article_information
 
