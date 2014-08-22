@@ -1,0 +1,29 @@
+[
+    { "keys": [","], "command": "run_macro_file", "args":{"file": "Packages/SublimeHatena/HatenaAutoTags.sublime-macro"}, "context":
+     [
+         { "key": "selection_empty", "operator": "equal", "operand": true, "match_all": true },
+         { "key": "preceding_text", "operator": "regex_match", "operand": "^\\s*categories\\s*:.*$", "match_all": true },
+         { "key": "eol_selector", "operator": "not_equal", "operand": "string.quoted", "match_all": true },
+         { "key": "selector", "operator": "equal", "operand": "meta.metadata.hatena - meta.structure.array", "match_all": true },
+         { "key": "selector", "operator": "not_equal", "operand": "markup.raw", "match_all": true }
+     ]
+    },
+    { "keys": [" "], "command": "auto_complete", "context":
+     [
+         { "key": "selection_empty", "operator": "equal", "operand": true, "match_all": true },
+         { "key": "preceding_text", "operator": "regex_match", "operand": "^\\s*categories\\s*:\\s*$", "match_all": true },
+         { "key": "eol_selector", "operator": "not_equal", "operand": "string.quoted", "match_all": true },
+         { "key": "selector", "operator": "equal", "operand": "meta.metadata.hatena - meta.structure.array", "match_all": true },
+         { "key": "selector", "operator": "not_equal", "operand": "markup.raw", "match_all": true }
+     ]
+    },
+    { "keys": [","], "command": "run_macro_file", "args":{"file": "Packages/SublimeHatena/HatenaAutoTagsQuoted.sublime-macro"}, "context":
+     [
+         { "key": "selection_empty", "operator": "equal", "operand": true, "match_all": true },
+         { "key": "preceding_text", "operator": "regex_match", "operand": "^\\s*categories\\s*:.*$", "match_all": true },
+         { "key": "eol_selector", "operator": "not_equal", "operand": "string.quoted", "match_all": true },
+         { "key": "selector", "operator": "equal", "operand": "meta.metadata.hatena meta.structure.array", "match_all": true },
+         { "key": "selector", "operator": "not_equal", "operand": "markup.raw", "match_all": true }
+     ]
+    },
+]
