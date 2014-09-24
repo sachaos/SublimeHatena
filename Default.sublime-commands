@@ -1,4 +1,11 @@
 [
     { "command": "new_hatena_article", "caption": "Hatena: New empty article" },
-    { "command": "post_hatena_article", "caption": "Hatena: Post this article"}
+    { "command": "post_hatena_article", "caption": "Hatena: Post this article"},
+    {
+        "caption": "Evernote Settings: User",
+        "command": "open_file", "args":
+        {
+            "file": "${packages}/User/Evernote.sublime-settings"
+        }
+    },
 ]
