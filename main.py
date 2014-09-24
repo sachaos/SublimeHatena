@@ -14,15 +14,30 @@ import urllib
 import os
 from xml.etree.ElementTree import fromstring
 
+package_file = os.path.normpath(os.path.abspath(__file__))
+package_path = os.path.dirname(package_file)
+
+USER_AGENT = {'User-Agent': 'SublimeHatena/0.1'}
+
+HATENA_SETTINGS = "Hatena.sublime-settings"
+
+DEBUG = True
+
+if DEBUG:
+    def LOG(*args):
+        print("SublimeHatena:", *args)
+else:
+    def LOG(*args):
+        pass
+
 ############################################################
 #               セッティング用
 ############################################################
 def load_settings():
-    with open(os.path.join(sublime.packages_path(), "SublimeHatena", "account_settings.json"), "r") as json_f:
-        parsed_settings = json.load(json_f)
-    if parsed_settings:
-        return parsed_settings[0]
-
+    settings = sublime.load_settings(HATENA_SETTINGS)
+    if settings:
+        LOG(settings.get("user_name"))
+        return settings
 
 ############################################################
 #               ポスト用
@@ -58,7 +73,6 @@ def make_categories_tag(categories):
     categories = map(lambda x: x.strip(), categories.split(","))
     category_tags = ""
     for category in categories:
-        print(category)
         category_tags += '<category term="{}" />'.format(category)
     return category_tags
 
@@ -93,7 +107,6 @@ def parse_article(article_text):
 def make_xml(article_info):
     article_info["categories"] = make_categories_tag(article_info["categories"])
     made_xml = TEMPLATE.format(**article_info)
-    print(made_xml)
     return made_xml
 
 
@@ -177,7 +190,6 @@ $0
 
 """
 
-
 # 既存のカテゴリーを取得(入力補完用)
 def get_categories():
     # account_settings.jsonからはてなアカウントを読み込み
@@ -192,13 +204,15 @@ def get_categories():
 
 class HatenaListener(sublime_plugin.EventListener):
 
+    categories = get_categories()
+
     def on_query_completions(self, view, prefix, locations):
         loc = locations[0]
         if not view.scope_name(loc).startswith("text.html.markdown.hatena meta.metadata.hatena"):
             return None
         line = view.substr(view.line(loc)).lstrip()
         if line.startswith("categories"):
-            complete_categories = [(category, category) for category in get_categories() if category.startswith(prefix)]
+            complete_categories = [(category, category) for category in self.__class__.categories if category.startswith(prefix)]
             return complete_categories
         return None
 
