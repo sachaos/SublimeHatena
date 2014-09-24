@@ -17,8 +17,6 @@ from xml.etree.ElementTree import fromstring
 package_file = os.path.normpath(os.path.abspath(__file__))
 package_path = os.path.dirname(package_file)
 
-USER_AGENT = {'User-Agent': 'SublimeHatena/0.1'}
-
 ACCOUNT_SETTINGS = "SublimeHatena.sublime-settings"
 
 DEBUG = True
@@ -30,16 +28,29 @@ else:
     def LOG(*args):
         pass
 
-############################################################
-#               セッティング用
-############################################################
-def load_settings():
-    settings = sublime.load_settings(ACCOUNT_SETTINGS)
-    if settings:
-        return settings
-    else:
-        LOG("We failed to load setting, please set your account.")
-    return
+class HatenaDo(object):
+
+    settings = {}
+    categories_cached = []
+
+    def load_settings(self):
+        loaded_settings = sublime.load_settings(ACCOUNT_SETTINGS)
+        if not loaded_settings:
+            LOG("We failed to load setting, please set your account.")
+        else:
+            HatenaDo.settings["user_name"] = loaded_settings.get("user_name")
+            HatenaDo.settings["blog_id"] = loaded_settings.get("blog_id")
+            HatenaDo.settings["api_key"] = loaded_settings.get("api_key")
+
+    # 既存のカテゴリーを取得(入力補完用)
+    def get_categories(self):
+        # WSSE認証のための文字列を作成
+        wsse = create_wsse(self.settings["user_name"], self.settings["api_key"])
+        url = "https://blog.hatena.ne.jp/{0}/{1}/atom/category".format(self.settings["user_name"], self.settings["blog_id"])
+        res = request_to_hatena(url, None, wsse)
+        categories_xml = res.read()
+        elem = fromstring(categories_xml)
+        HatenaDo.categories_cached = list(map(lambda x: x.attrib["term"], elem.findall("*")))
 
 ############################################################
 #               ポスト用
@@ -135,47 +146,47 @@ def create_wsse(username, password):
 
 
 def request_to_hatena(url, data, wsse):
-    headers = {"X-WSSE": wsse}
+    headers = {"X-WSSE": wsse, "User-Agent": "SublimeHatena/0.1"}
     if data:
         data = data.encode("utf-8")
     req = urllib.request.Request(url, data=data, headers=headers)
     try:
         responce = urllib.request.urlopen(req)
     except urllib.error.HTTPError as e:
-        print(e.code)
-        print(e.read())
+        LOG(url)
+        LOG(data)
+        LOG(e.code)
+        LOG(e.read())
         responce = None
     return responce
 
-
-def post_article(post_text):
-    # account_settings.jsonからはてなアカウントを読み込み
-    settings = load_settings()
-    # テキストをパースして辞書に格納
-    article_info = parse_article(post_text)
-    # パースした辞書を元にXML文章をテンプレートに埋め込む
-    article_xml = make_xml(article_info)
-    # 送信先
-    url = "http://blog.hatena.ne.jp/{0}/{1}/atom/entry".format(settings["user_name"], settings["blog_id"])
-    # WSSE認証のための文字列をさくせい
-    wsse = create_wsse(settings["user_name"], settings["api_key"])
-    # リクエストを送る
-    res = request_to_hatena(url, article_xml, wsse)
-    if res:
-        return True
-    else:
-        return False
-
-
-class PostHatenaArticleCommand(sublime_plugin.WindowCommand):
+class PostHatenaArticleCommand(HatenaDo, sublime_plugin.WindowCommand):
 
     def run(self):
         view = self.window.active_view()
         view_text = view.substr(sublime.Region(0, view.size()))
-        if post_article(view_text):
+        if self.post_article(view_text):
             sublime.status_message("SublimeHatena: The article has been posted correctly")
         else:
             sublime.status_message("SublimeHatena: Sorry, Error occured")
+
+    def post_article(self, post_text):
+        # account_settings.jsonからはてなアカウントを読み込み
+        settings = self.load_settings()
+        # テキストをパースして辞書に格納
+        article_info = parse_article(post_text)
+        # パースした辞書を元にXML文章をテンプレートに埋め込む
+        article_xml = make_xml(article_info)
+        # 送信先
+        url = "http://blog.hatena.ne.jp/{0}/{1}/atom/entry".format(self.settings["user_name"], self.settings["blog_id"])
+        # WSSE認証のための文字列をさくせい
+        wsse = create_wsse(self.settings["user_name"], self.settings["api_key"])
+        # リクエストを送る
+        res = request_to_hatena(url, article_xml, wsse)
+        if res:
+            return True
+        else:
+            return False
 
 
 ############################################################
@@ -192,40 +203,38 @@ $0
 
 """
 
-# 既存のカテゴリーを取得(入力補完用)
-def get_categories():
-    # account_settings.jsonからはてなアカウントを読み込み
-    settings = load_settings()
-    # WSSE認証のための文字列を作成
-    wsse = create_wsse(settings.get("user_name"), settings.get("api_key"))
-    url = "https://blog.hatena.ne.jp/{0}/{1}/atom/category".format(settings.get("user_name"), settings.get("blog_id"))
-    res = request_to_hatena(url, None, wsse)
-    categories_xml = res.read()
-    elem = fromstring(categories_xml)
-    return map(lambda x: x.attrib["term"], elem.findall("*"))
+class HatenaListener(HatenaDo, sublime_plugin.EventListener):
 
-class HatenaListener(sublime_plugin.EventListener):
-
-    # categories = get_categories()
+    first_time = True
 
     def on_query_completions(self, view, prefix, locations):
+        LOG("completion start.")
+        if self.first_time:
+            LOG("categories is loaded.")
+            self.get_categories()
+            LOG(HatenaDo.categories_cached)
+            self.first_time = False
         loc = locations[0]
         if not view.scope_name(loc).startswith("text.html.markdown.hatena meta.metadata.hatena"):
             return None
         line = view.substr(view.line(loc)).lstrip()
         if line.startswith("categories"):
-            complete_categories = [(category, category) for category in self.__class__.categories if category.startswith(prefix)]
+            complete_categories = [(category, category) for category in HatenaDo.categories_cached if category.startswith(prefix)]
             return complete_categories
         return None
 
 
 # 新しいタブに記事のひな形を作成する。
-class NewHatenaArticleCommand(sublime_plugin.WindowCommand):
+class NewHatenaArticleCommand(HatenaDo, sublime_plugin.WindowCommand):
 
     def run(self):
+        self.load_settings()
         view = self.window.new_file()
         view.set_syntax_file("Packages/SublimeHatena/Hatena.tmLanguage")
         view.set_status("SublimeHatena", "New Article has made")
         view.set_scratch(True)
         view.run_command("insert_snippet", {"contents": META_SNIPPET})
         sublime.set_timeout(lambda: view.run_command("auto_complete"), 10)
+
+def plugin_loaded():
+    HatenaListener.load_settings(HatenaListener)
