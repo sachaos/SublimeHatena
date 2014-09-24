@@ -2,7 +2,7 @@
     { "command": "new_hatena_article", "caption": "Hatena: New empty article" },
     { "command": "post_hatena_article", "caption": "Hatena: Post this article"},
     {
-        "caption": "Evernote Settings: User",
+        "caption": "Hatena: Account Settings",
         "command": "open_file", "args":
         {
             "file": "${packages}/User/Hatena.sublime-settings"
