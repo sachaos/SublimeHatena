@@ -21,20 +21,9 @@ $ cd {パッケージをおいてるところ}
 $ git clone https://github.com/sachaos/SublimeHatena.git
 ```
 
+## accountの設定をする
 
-## account_settings.jsonを用意する
-
-こんな風にaccount_setting.jsonを書いて``{Sublime Textの場所}/Packages/SublimeHatena/``上においてください。
-
-```
-[
-   {
-       "user_name": "******",
-       "blog_id": "******.hatenablog.com",
-       "api_key": "*********" # ブログの詳細設定に書いている
-   }
-]
-```
+作成中
 
 ## command + shift + p
 
