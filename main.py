@@ -19,7 +19,7 @@ package_path = os.path.dirname(package_file)
 
 USER_AGENT = {'User-Agent': 'SublimeHatena/0.1'}
 
-HATENA_SETTINGS = "Hatena.sublime-settings"
+ACCOUNT_SETTINGS = "SublimeHatena.sublime-settings"
 
 DEBUG = True
 
@@ -34,10 +34,12 @@ else:
 #               セッティング用
 ############################################################
 def load_settings():
-    settings = sublime.load_settings(HATENA_SETTINGS)
+    settings = sublime.load_settings(ACCOUNT_SETTINGS)
     if settings:
-        LOG(settings.get("user_name"))
         return settings
+    else:
+        LOG("We failed to load setting, please set your account.")
+    return
 
 ############################################################
 #               ポスト用
@@ -195,8 +197,8 @@ def get_categories():
     # account_settings.jsonからはてなアカウントを読み込み
     settings = load_settings()
     # WSSE認証のための文字列を作成
-    wsse = create_wsse(settings["user_name"], settings["api_key"])
-    url = "https://blog.hatena.ne.jp/{0}/{1}/atom/category".format(settings["user_name"], settings["blog_id"])
+    wsse = create_wsse(settings.get("user_name"), settings.get("api_key"))
+    url = "https://blog.hatena.ne.jp/{0}/{1}/atom/category".format(settings.get("user_name"), settings.get("blog_id"))
     res = request_to_hatena(url, None, wsse)
     categories_xml = res.read()
     elem = fromstring(categories_xml)
@@ -204,7 +206,7 @@ def get_categories():
 
 class HatenaListener(sublime_plugin.EventListener):
 
-    categories = get_categories()
+    # categories = get_categories()
 
     def on_query_completions(self, view, prefix, locations):
         loc = locations[0]
