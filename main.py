@@ -19,7 +19,7 @@ package_path = os.path.dirname(package_file)
 
 ACCOUNT_SETTINGS = "SublimeHatena.sublime-settings"
 
-DEBUG = True
+DEBUG = False
 
 if DEBUG:
     def LOG(*args):
@@ -223,12 +223,12 @@ class HatenaListener(HatenaDo, sublime_plugin.EventListener):
             return complete_categories
         return None
 
-
 # 新しいタブに記事のひな形を作成する。
 class NewHatenaArticleCommand(HatenaDo, sublime_plugin.WindowCommand):
 
     def run(self):
         self.load_settings()
+        HatenaListener.first_time = True
         view = self.window.new_file()
         view.set_syntax_file("Packages/SublimeHatena/Hatena.tmLanguage")
         view.set_status("SublimeHatena", "New Article has made")
