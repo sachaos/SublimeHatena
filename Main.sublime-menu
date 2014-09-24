@@ -23,7 +23,7 @@
                             { "caption": "-" },
                             {
                                 "command": "open_file",
-                                "args": {"file": "${packages}/SublimeHatena/Hatena.sublime-settings"},
+                                "args": {"file": "${packages}/User/Hatena.sublime-settings"},
                                 "caption": "Account Setting"
                             },
                         ]
