@@ -5,7 +5,7 @@
         "caption": "Evernote Settings: User",
         "command": "open_file", "args":
         {
-            "file": "${packages}/User/Evernote.sublime-settings"
+            "file": "${packages}/User/Hatena.sublime-settings"
         }
     },
 ]
