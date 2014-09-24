@@ -182,14 +182,13 @@ $0
 def get_categories():
     # account_settings.jsonからはてなアカウントを読み込み
     settings = load_settings()
-    # WSSE認証のための文字列をさくせい
+    # WSSE認証のための文字列を作成
     wsse = create_wsse(settings["user_name"], settings["api_key"])
     url = "https://blog.hatena.ne.jp/{0}/{1}/atom/category".format(settings["user_name"], settings["blog_id"])
     res = request_to_hatena(url, None, wsse)
     categories_xml = res.read()
     elem = fromstring(categories_xml)
     return map(lambda x: x.attrib["term"], elem.findall("*"))
-
 
 class HatenaListener(sublime_plugin.EventListener):
 
