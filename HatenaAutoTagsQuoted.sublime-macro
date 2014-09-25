@@ -1,4 +1,10 @@
 [
     {"command": "insert_snippet", "args": {"contents": ", \"$1\"$0"}},
-    {"command": "auto_complete"}
+    {
+        "command": "auto_complete",
+        "context": [
+            { "key": "selector", "operator": "equal", "operand": "meta.metadata.hatena - meta.structure.array", "match_all": true },
+            { "key": "selector", "operator": "not_equal", "operand": "markup.raw", "match_all": true }
+        ]
+    }
 ]

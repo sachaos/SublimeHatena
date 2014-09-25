@@ -219,15 +219,15 @@ class HatenaListener(HatenaDo, sublime_plugin.EventListener):
     first_time = True
 
     def on_query_completions(self, view, prefix, locations):
+        loc = locations[0]
+        if not view.scope_name(loc).startswith("text.html.markdown.hatena meta.metadata.hatena"):
+            return None
         LOG("completion start.")
         if self.first_time:
             LOG("categories is loaded.")
             self.fetch_categories()
             LOG(HatenaDo.categories_cached)
             self.first_time = False
-        loc = locations[0]
-        if not view.scope_name(loc).startswith("text.html.markdown.hatena meta.metadata.hatena"):
-            return None
         line = view.substr(view.line(loc)).lstrip()
         if line.startswith("categories"):
             complete_categories = [(category, category) for category in HatenaDo.categories_cached if category.startswith(prefix)]
