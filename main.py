@@ -41,21 +41,28 @@ class HatenaDo(object):
             HatenaDo.settings["blog_id"] = loaded_settings.get("blog_id")
             HatenaDo.settings["api_key"] = loaded_settings.get("api_key")
 
-    # 既存のカテゴリーを取得(入力補完用)
-    def get_categories(self):
-        # WSSE認証のための文字列を作成
-        wsse = create_wsse(self.settings["user_name"], self.settings["api_key"])
-        url = "https://blog.hatena.ne.jp/{0}/{1}/atom/category".format(self.settings["user_name"], self.settings["blog_id"])
-        res = request_to_hatena(url, None, wsse)
-        categories_xml = res.read()
-        elem = fromstring(categories_xml)
-        HatenaDo.categories_cached = list(map(lambda x: x.attrib["term"], elem.findall("*")))
+    def fetch_categories(self):
+        categories = get_categories(self.settings["user_name"], self.settings["blog_id"], self.settings["api_key"])
+        HatenaDo.categories_cached = categories
 
     def is_enabled(self):
         settings = sublime.load_settings(ACCOUNT_SETTINGS)
         if is_settings_exist(settings):
             return True
         return False
+
+# 既存のカテゴリーを取得(入力補完用)
+def get_categories(user_name, blog_id, api_key):
+    # WSSE認証のための文字列を作成
+    wsse = create_wsse(user_name, api_key)
+    url = "https://blog.hatena.ne.jp/{0}/{1}/atom/category".format(user_name, blog_id)
+    res = request_to_hatena(url, None, wsse)
+    if res is None:
+        return None
+    categories_xml = res.read()
+    elem = fromstring(categories_xml)
+    return list(map(lambda x: x.attrib["term"], elem.findall("*")))
+
 
 ############################################################
 #               ポスト用
@@ -151,7 +158,7 @@ def create_wsse(username, password):
 
 
 def request_to_hatena(url, data, wsse):
-    headers = {"X-WSSE": wsse, "User-Agent": "SublimeHatena/0.1"}
+    headers = {"X-WSSE": wsse, "User-Agent": "SublimeHatena/1.1"}
     if data:
         data = data.encode("utf-8")
     req = urllib.request.Request(url, data=data, headers=headers)
@@ -215,7 +222,7 @@ class HatenaListener(HatenaDo, sublime_plugin.EventListener):
         LOG("completion start.")
         if self.first_time:
             LOG("categories is loaded.")
-            self.get_categories()
+            self.fetch_categories()
             LOG(HatenaDo.categories_cached)
             self.first_time = False
         loc = locations[0]
@@ -235,7 +242,7 @@ class NewHatenaArticleCommand(HatenaDo, sublime_plugin.WindowCommand):
         HatenaListener.first_time = True
         view = self.window.new_file()
         view.set_syntax_file("Packages/SublimeHatena/Hatena.tmLanguage")
-        view.set_status("SublimeHatena", "New Article has made")
+        view.set_status("SublimeHatena", "SublimeHatena: New Article has made")
         view.set_scratch(True)
         view.run_command("insert_snippet", {"contents": META_SNIPPET})
         sublime.set_timeout(lambda: view.run_command("auto_complete"), 10)
@@ -252,7 +259,6 @@ class OpenHatenaSettingsCommand(sublime_plugin.WindowCommand):
 
     def run(self):
         LOG("Open hatena settings command start.")
-        # TODO: もしファイルが存在したらそのファイルを開いてあげる様にする
         self.open_settings_file()
 
     def open_settings_file(self):
@@ -263,23 +269,29 @@ class OpenHatenaSettingsCommand(sublime_plugin.WindowCommand):
             f.write(ACCOUNT_SETTINGS_SNIPPET)
             f.close()
         view = self.window.open_file(settings_path)
-        view.set_status("SublimeHatena", "New account settings file has made")
+        view.set_status("SublimeHatena", "SublimeHatena: Please make sure your settings file.")
 
-def is_settings_exist(settings):
+def is_settings_exist(settings_path):
     # TODO: need to check that we can access with the setting file.
     # and if we can't that, we should call OpenHatenaSettingsCommand.
+    settings_fp = open(settings_path)
+    settings = json.load(settings_fp)
     need_properties = ["user_name", "blog_id", "api_key"]
     for need_property in need_properties:
-        if not settings.get(need_property):
+        if not need_property in settings:
+            OpenHatenaSettingsCommand(sublime.active_window()).run()
             return False
+    # Can we access?
+    if get_categories(settings["user_name"], settings["blog_id"], settings["api_key"]) is None:
+        OpenHatenaSettingsCommand(sublime.active_window()).run()
+        return False
     return True
 
 def plugin_loaded():
     LOG("Plugin loaded.")
-    settings = sublime.load_settings(ACCOUNT_SETTINGS)
-    if is_settings_exist(settings):
+    settings_path = os.path.join(sublime.packages_path(), "User/SublimeHatena.sublime-settings")
+    if is_settings_exist(settings_path):
         LOG("Setting file is OK.")
     else:
         LOG("Setting file is not correct.")
-        a = OpenHatenaSettingsCommand(sublime.active_window())
-        a.run()
+        OpenHatenaSettingsCommand(sublime.active_window()).run()
