@@ -31,6 +31,7 @@ class HatenaDo(object):
 
     settings = {}
     categories_cached = []
+    is_settings_checked = False
 
     def load_settings(self):
         loaded_settings = sublime.load_settings(ACCOUNT_SETTINGS)
@@ -46,9 +47,9 @@ class HatenaDo(object):
         HatenaDo.categories_cached = categories
 
     def is_enabled(self):
-        settings = sublime.load_settings(ACCOUNT_SETTINGS)
-        if is_settings_exist():
+        if is_settings_correct(HatenaDo.is_settings_checked):
             return True
+        OpenHatenaSettingsCommand(sublime.active_window()).run()
         return False
 
 # 既存のカテゴリーを取得(入力補完用)
@@ -67,7 +68,6 @@ def get_categories(user_name, blog_id, api_key):
 ############################################################
 #               ポスト用
 ############################################################
-
 
 TEMPLATE = """\
 <?xml version="1.0" encoding="utf-8"?>
@@ -108,7 +108,6 @@ def parse_article_header(header_text):
         key, values = line.split(":")
         article_header[key.strip()] = values.strip()
     return article_header
-
 
 def parse_article(article_text):
     if article_text.find("---") == 0:
@@ -155,8 +154,8 @@ def create_wsse(username, password):
     # WSSE認証用文字列として整形して返す
     return 'UsernameToken Username="{0}", PasswordDigest="{1}", Nonce="{2}", Created="{3}"'.format(username, digest, nonce, created)
 
-
 def request_to_hatena(url, data, wsse):
+    LOG("request start")
     headers = {"X-WSSE": wsse, "User-Agent": "SublimeHatena/1.1"}
     if data:
         data = data.encode("utf-8")
@@ -270,29 +269,29 @@ class OpenHatenaSettingsCommand(sublime_plugin.WindowCommand):
         view = self.window.open_file(settings_path)
         view.set_status("SublimeHatena", "SublimeHatena: Please make sure your settings file.")
 
-def is_settings_exist():
+def is_settings_correct(is_settings_checked = False):
+    if is_settings_checked:
+        return True
     settings_path = os.path.join(sublime.packages_path(), "User/SublimeHatena.sublime-settings")
     try:
         settings_fp = open(settings_path)
         settings = json.load(settings_fp)
     except Exception:
-        OpenHatenaSettingsCommand(sublime.active_window()).run()
         return False
     need_properties = ["user_name", "blog_id", "api_key"]
     for need_property in need_properties:
         if not need_property in settings:
-            OpenHatenaSettingsCommand(sublime.active_window()).run()
             return False
     # Can we access?
     if get_categories(settings["user_name"], settings["blog_id"], settings["api_key"]) is None:
-        OpenHatenaSettingsCommand(sublime.active_window()).run()
         return False
     return True
 
 def plugin_loaded():
     LOG("Plugin loaded.")
-    if is_settings_exist():
+    if is_settings_correct():
         LOG("Setting file is OK.")
+        HatenaDo.is_settings_checked = True
         HatenaDo.load_settings(ACCOUNT_SETTINGS)
     else:
         LOG("Setting file is not correct.")
