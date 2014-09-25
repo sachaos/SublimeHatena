@@ -18,7 +18,6 @@ package_file = os.path.normpath(os.path.abspath(__file__))
 package_path = os.path.dirname(package_file)
 
 ACCOUNT_SETTINGS = "SublimeHatena.sublime-settings"
-
 DEBUG = True
 
 if DEBUG:
@@ -243,9 +242,9 @@ class NewHatenaArticleCommand(HatenaDo, sublime_plugin.WindowCommand):
 
 ACCOUNT_SETTINGS_SNIPPET = """\
 {
-    "user_name": "${1:xxx}",
-    "blog_id": "${2:xxx}.hatenablog.com",
-    "api_key": "${3:xxxxxxxxx}"
+    "user_name": "your_user_name",
+    "blog_id": "your_blog_id.hatenablog.com",
+    "api_key": "your_api_key"
 }
 """
 
@@ -257,11 +256,14 @@ class OpenHatenaSettingsCommand(sublime_plugin.WindowCommand):
         self.open_settings_file()
 
     def open_settings_file(self):
-        view = self.window.new_file()
-        view.set_name(ACCOUNT_SETTINGS)
-        view.set_scratch(True)
+        settings_path = os.path.join(sublime.packages_path(), "User/SublimeHatena.sublime-settings")
+        if not os.path.isfile(settings_path):
+            LOG(settings_path)
+            f = open(settings_path, "w")
+            f.write(ACCOUNT_SETTINGS_SNIPPET)
+            f.close()
+        view = self.window.open_file(settings_path)
         view.set_status("SublimeHatena", "New account settings file has made")
-        view.run_command("insert_snippet", {"contents": ACCOUNT_SETTINGS_SNIPPET})
 
 def is_settings_exist(settings):
     # TODO: need to check that we can access with the setting file.

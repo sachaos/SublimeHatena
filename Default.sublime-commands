@@ -3,9 +3,6 @@
     { "command": "post_hatena_article", "caption": "Hatena: Post this article"},
     {
         "caption": "Hatena: Account Settings",
-        "command": "open_file", "args":
-        {
-            "file": "${packages}/User/SublimeHatena.sublime-settings"
-        }
+        "command": "open_hatena_settings"
     },
 ]

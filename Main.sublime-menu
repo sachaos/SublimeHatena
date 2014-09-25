@@ -27,8 +27,7 @@
                                 "caption": "Account Setting Example"
                             },
                             {
-                                "command": "open_file",
-                                "args": {"file": "${packages}/User/SublimeHatena.sublime-settings"},
+                                "command": "open_hatena_settings",
                                 "caption": "Account Setting"
                             },
                         ]
