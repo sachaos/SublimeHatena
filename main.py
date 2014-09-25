@@ -19,7 +19,7 @@ package_path = os.path.dirname(package_file)
 
 ACCOUNT_SETTINGS = "SublimeHatena.sublime-settings"
 
-DEBUG = False
+DEBUG = True
 
 if DEBUG:
     def LOG(*args):
@@ -240,7 +240,28 @@ class NewHatenaArticleCommand(HatenaDo, sublime_plugin.WindowCommand):
         view.set_scratch(True)
         view.run_command("insert_snippet", {"contents": META_SNIPPET})
         sublime.set_timeout(lambda: view.run_command("auto_complete"), 10)
-        
+
+ACCOUNT_SETTINGS_SNIPPET = """\
+{
+    "user_name": "${1:xxx}",
+    "blog_id": "${2:xxx}.hatenablog.com",
+    "api_key": "${3:xxxxxxxxx}"
+}
+"""
+
+class OpenHatenaSettingsCommand(sublime_plugin.WindowCommand):
+
+    def run(self):
+        LOG("Open hatena settings command start.")
+        self.open_settings_file()
+
+    def open_settings_file(self):
+        view = self.new_file()
+        view.set_name(ACCOUNT_SETTINGS)
+        view.set_scratch(True)
+        view.set_status("SublimeHatena", "New account settings file has made")
+        view.run_command("insert_snippet", {"contents": ACCOUNT_SETTINGS_SNIPPET})
+
 def is_settings_exist(settings):
     need_properties = ["use_name", "blog_id", "api_key"]
     for need_property in need_properties:
@@ -249,8 +270,10 @@ def is_settings_exist(settings):
     return True
 
 def plugin_loaded():
+    LOG("Plugin loaded.")
     settings = sublime.load_settings(ACCOUNT_SETTINGS)
     if is_settings_exist(settings):
-        pass
+        LOG("Setting file is OK.")
     else:
-        raise Exception
+        LOG("Setting file is not correct.")
+        OpenHatenaSettingsCommand.open_settings_file(sublime.active_window())
