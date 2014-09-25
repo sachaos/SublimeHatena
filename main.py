@@ -253,17 +253,20 @@ class OpenHatenaSettingsCommand(sublime_plugin.WindowCommand):
 
     def run(self):
         LOG("Open hatena settings command start.")
+        # TODO: もしファイルが存在したらそのファイルを開いてあげる様にする
         self.open_settings_file()
 
     def open_settings_file(self):
-        view = self.new_file()
+        view = self.window.new_file()
         view.set_name(ACCOUNT_SETTINGS)
         view.set_scratch(True)
         view.set_status("SublimeHatena", "New account settings file has made")
         view.run_command("insert_snippet", {"contents": ACCOUNT_SETTINGS_SNIPPET})
 
 def is_settings_exist(settings):
-    need_properties = ["use_name", "blog_id", "api_key"]
+    # TODO: need to check that we can access with the setting file.
+    # and if we can't that, we should call OpenHatenaSettingsCommand.
+    need_properties = ["user_name", "blog_id", "api_key"]
     for need_property in need_properties:
         if not settings.get(need_property):
             return False
@@ -276,4 +279,5 @@ def plugin_loaded():
         LOG("Setting file is OK.")
     else:
         LOG("Setting file is not correct.")
-        OpenHatenaSettingsCommand.open_settings_file(sublime.active_window())
+        a = OpenHatenaSettingsCommand(sublime.active_window())
+        a.run()
