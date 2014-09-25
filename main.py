@@ -93,7 +93,6 @@ ARTICLE_HEADER = {
     "draft": "no"
 }
 
-
 def make_categories_tag(categories):
     categories = map(lambda x: x.strip(), categories.split(","))
     category_tags = ""
@@ -273,8 +272,12 @@ class OpenHatenaSettingsCommand(sublime_plugin.WindowCommand):
 
 def is_settings_exist():
     settings_path = os.path.join(sublime.packages_path(), "User/SublimeHatena.sublime-settings")
-    settings_fp = open(settings_path)
-    settings = json.load(settings_fp)
+    try:
+        settings_fp = open(settings_path)
+        settings = json.load(settings_fp)
+    except Exception:
+        OpenHatenaSettingsCommand(sublime.active_window()).run()
+        return False
     need_properties = ["user_name", "blog_id", "api_key"]
     for need_property in need_properties:
         if not need_property in settings:
