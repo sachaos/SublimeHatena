@@ -47,7 +47,7 @@ class HatenaDo(object):
 
     def is_enabled(self):
         settings = sublime.load_settings(ACCOUNT_SETTINGS)
-        if is_settings_exist(settings):
+        if is_settings_exist():
             return True
         return False
 
@@ -271,7 +271,8 @@ class OpenHatenaSettingsCommand(sublime_plugin.WindowCommand):
         view = self.window.open_file(settings_path)
         view.set_status("SublimeHatena", "SublimeHatena: Please make sure your settings file.")
 
-def is_settings_exist(settings_path):
+def is_settings_exist():
+    settings_path = os.path.join(sublime.packages_path(), "User/SublimeHatena.sublime-settings")
     settings_fp = open(settings_path)
     settings = json.load(settings_fp)
     need_properties = ["user_name", "blog_id", "api_key"]
@@ -287,9 +288,9 @@ def is_settings_exist(settings_path):
 
 def plugin_loaded():
     LOG("Plugin loaded.")
-    settings_path = os.path.join(sublime.packages_path(), "User/SublimeHatena.sublime-settings")
-    if is_settings_exist(settings_path):
+    if is_settings_exist():
         LOG("Setting file is OK.")
+        HatenaDo.load_settings(ACCOUNT_SETTINGS)
     else:
         LOG("Setting file is not correct.")
         OpenHatenaSettingsCommand(sublime.active_window()).run()
