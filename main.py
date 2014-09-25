@@ -52,6 +52,12 @@ class HatenaDo(object):
         elem = fromstring(categories_xml)
         HatenaDo.categories_cached = list(map(lambda x: x.attrib["term"], elem.findall("*")))
 
+    def is_enabled(self):
+        settings = sublime.load_settings(ACCOUNT_SETTINGS)
+        if is_settings_exist(settings):
+            return True
+        return False
+
 ############################################################
 #               ポスト用
 ############################################################
@@ -188,7 +194,6 @@ class PostHatenaArticleCommand(HatenaDo, sublime_plugin.WindowCommand):
         else:
             return False
 
-
 ############################################################
 #               記事作成用
 ############################################################
@@ -235,6 +240,17 @@ class NewHatenaArticleCommand(HatenaDo, sublime_plugin.WindowCommand):
         view.set_scratch(True)
         view.run_command("insert_snippet", {"contents": META_SNIPPET})
         sublime.set_timeout(lambda: view.run_command("auto_complete"), 10)
+        
+def is_settings_exist(settings):
+    need_properties = ["use_name", "blog_id", "api_key"]
+    for need_property in need_properties:
+        if not settings.get(need_property):
+            return False
+    return True
 
 def plugin_loaded():
-    HatenaListener.load_settings(HatenaListener)
+    settings = sublime.load_settings(ACCOUNT_SETTINGS)
+    if is_settings_exist(settings):
+        pass
+    else:
+        raise Exception
