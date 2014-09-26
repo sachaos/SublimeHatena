@@ -285,13 +285,13 @@ def is_settings_correct(is_settings_checked = False):
     # Can we access?
     if get_categories(settings["user_name"], settings["blog_id"], settings["api_key"]) is None:
         return False
+    HatenaDo.is_settings_checked = True
     return True
 
 def plugin_loaded():
     LOG("Plugin loaded.")
     if is_settings_correct():
         LOG("Setting file is OK.")
-        HatenaDo.is_settings_checked = True
         HatenaDo.load_settings(ACCOUNT_SETTINGS)
     else:
         LOG("Setting file is not correct.")

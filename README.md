@@ -23,7 +23,19 @@ $ git clone https://github.com/sachaos/SublimeHatena.git
 
 ## accountの設定をする
 
-作成中
+インストールするとアカウントの設定がなされていない場合、
+packages/User/以下にSublimeHatena.sublime-settingsというファイルが自動的に作成されます。
+
+JSON形式でユーザー名、ブログID、APIキー(はてなブログの詳細設定に記載されている)を書き込んでください。
+
+```
+{
+    "user_name": "your_user_name",
+    "blog_id": "your_blog_id.hatenablog.com",
+    "api_key": "your_api_key"
+}
+
+```
 
 ## command + shift + p
 
