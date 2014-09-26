@@ -37,6 +37,10 @@ JSON形式でユーザー名、ブログID、APIキー(はてなブログの詳�
 
 ```
 
+コマンドパレットに以下のコマンドが出ていれば正常に登録できています。
+
+![サンプル](http://i.gyazo.com/e1c1072c61f8f62362ad09e14a3b47d0.png)
+
 ## command + shift + p
 
 ### Hatena: New empty article
